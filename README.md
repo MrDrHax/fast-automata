@@ -26,4 +26,6 @@ drawEngine.run()
 
 > This is one of the first versions. i need to make an api plugin. I would also like to add gpu acceleration or something.
 
+Install: `pip install git+https://github.com/MrDrHax/fast-automata.git`
+
 `python setup.py sdist bdist_wheel`
