@@ -1,4 +1,4 @@
-from ..fastautomata import LocalDraw, Board, Agents, ClassTypes
+from . import LocalDraw, Board, Agents, ClassTypes
 import logging, random
 
 # Create a logger
