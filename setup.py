@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="fast-automata",
-    version="0.1",
+    version="0.2",
     packages=find_packages(),
     author="Alejandro Fernandez",
     author_email="alexfh2001@gmail.com",

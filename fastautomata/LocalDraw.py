@@ -2,9 +2,9 @@ import pyglet as pyg
 from pyglet.window import key
 import pyglet.shapes as shapes
 from pyglet import gl
-import Board
-import ClassTypes
-import Agents
+from . import Board
+from . import ClassTypes
+from . import Agents
 
 import logging
 

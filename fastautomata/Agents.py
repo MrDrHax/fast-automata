@@ -1,5 +1,5 @@
-import ClassTypes
-import Board
+from . import ClassTypes
+from . import Board
 from typing import Callable
 
 nextID = 0

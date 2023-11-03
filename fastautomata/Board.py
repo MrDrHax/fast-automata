@@ -1,4 +1,4 @@
-import Agents, ClassTypes
+from . import Agents, ClassTypes
 from enum import Enum
 from pydantic import BaseModel
 from typing import Callable
