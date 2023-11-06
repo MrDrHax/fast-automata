@@ -96,7 +96,7 @@ class LocalDraw():
         for batch in self.layered_batch:
             batch.draw()
 
-    def step(self):
+    def step(self, dx = 0):
         '''
         Make a step in the simulation.
 
