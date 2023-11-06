@@ -1,6 +1,12 @@
 */__pycache__
 
-/build
-/dist
-/*.egg-info
+*build/
+*dist/
+*.egg-info/
 
+/.vscode
+
+# remove library files
+*.cpython*
+
+.VSCodeCounter/*

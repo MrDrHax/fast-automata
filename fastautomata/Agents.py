@@ -1,125 +1,100 @@
-from . import ClassTypes
-from . import Board
-from typing import Callable
+'''
+A wrapper for the agents in the simulation
+'''
 
-nextID = 0
+from . import fastautomata_clib
+from pydantic import BaseModel
+from .Board import SimulatedBoard as Board
+from .ClassTypes import Pos, PosModel
 
-class BaseAgent():
-    pos: ClassTypes.Pos
+import logging
+
+logger = logging.getLogger(__name__)
+
+simulatedAgentList: list[fastautomata_clib.Agent] = []
+staticAgentList: list[fastautomata_clib.BaseAgent] = []
+
+def initialize_agents(board: Board):
+    '''
+    sets the board reset function to resetAgents
+    '''
+    board.append_on_reset(resetAgents)
+
+def resetAgents(board: Board):
+    '''
+    Clears the agent lists
+    '''
+    simulatedAgentList.clear()
+    staticAgentList.clear()
+
+
+class SimulatedAgent(fastautomata_clib.Agent):
+    '''
+    A pythonic wrapper for the agents in the simulation
+    '''
+
+    def __init__(self, board: Board, pos: Pos, state: int, layer: int = 0, allowOverriding: bool = False):
+        super().__init__(board, pos, state, layer, allowOverriding)
+        simulatedAgentList.append(self)
+
+    def kill(self):
+        super().kill()
+        simulatedAgentList.remove(self)
+
+    def step(self) -> None:
+        logger.error("You have not overriden the simulated agent!!!!")
+
+    def __str__(self) -> str:
+        return super().__str__()
+    
+    def __repr__(self) -> str:
+        return super().__repr__()
+    
+class StaticAgent(fastautomata_clib.BaseAgent):
+    '''
+    A pythonic wrapper for the agents in the simulation
+    '''
+    def __init__(self, board: Board, pos: Pos, state: int, layer: int = 0, allowOverriding: bool = False):
+        super().__init__(board, pos, state, layer, allowOverriding)
+        staticAgentList.append(self)
+
+    def kill(self):
+        super().kill()
+        staticAgentList.remove(self)
+
+    def __str__(self) -> str:
+        return f"StaticAgent at {self.pos}"
+    
+    def __repr__(self) -> str:
+        return f"<StaticAgent at {self.pos}, state: {self.state}>"
+
+
+
+class SimplifiedAgentModel(BaseModel):
+    id: int
+    pos: PosModel
     state: str
-    next_state: str | None
-    next_pos: ClassTypes.Pos | None
     layer: int
 
-    id: int
+    def __init__(self, agent: fastautomata_clib.BaseAgent):
+        self.id = agent.getId()
+        self.pos = PosModel(x=agent.pos.x, y=agent.pos.y)
+        self.state = agent.state
+        self.layer = agent.getLayer
 
-    _board: 'Board.SimulatedBoard' or None = None #: Board.SimulatedBoard
-
-    def __init__(self, pos: ClassTypes.Pos, state: str, board: 'Board.SimulatedBoard', layer: int = 0):
-        self.pos = pos
-        self.state = state
-        self.next_state = None
-        self.layer = layer
-
-        self._board = board
-
-        global nextID
-        self.id = nextID
-        nextID += 1
-
-    def __repr__(self) -> str:
-        return f"Agent({self.pos}, {self.state}, {self.layer})"
-    
-    def kill(self):
-        self._board.agents.remove(self)
-
-
-class Agent(BaseAgent):
+class AgentsModel(BaseModel):
     '''
-    An agent that can move around the board.
+    A wrapper for the agents in the simulation
 
-    gets updated each frame.
-
-    Registers automatically to the board it is added to.
+    Used to export to json
     '''
-    on_update: list[Callable[['Agent'], None]]
+    simulated: list[SimplifiedAgentModel]
+    static: list[SimplifiedAgentModel]
 
-    def __init__(self, pos: ClassTypes.Pos, state: str, board: 'Board.SimulatedBoard', layer: int = 0):
-        super().__init__(pos, state, board, layer)
+    total: int
 
-        self.next_pos = None
-        self.next_state = None
-
-        self.on_update = []
-        self._board.agent_add(self)
-
-    
-    def step(self):
-        pass
-
-    def step_end(self):
-        updated = False
-
-        # update state
-        if self.next_state is not None:
-            self.state = self.next_state
-            self.next_state = None
-            updated = True
-
-        # update position
-        if self.next_pos is not None:
-            self.pos = self.next_pos
-            self.next_pos = None
-            updated = True
-
-        # call on_update
-        if updated:
-            for callable in self.on_update:
-                callable(self)
-
-    def get_neighbors(self, radios: int = 1, wrap: bool = False) -> list['Agent']:
-        toReturn = []
-
-        for j in range(self.pos.y + radios, self.pos.y - radios - 1, -1):
-            for i in range(self.pos.x - radios, self.pos.x + radios + 1):
-                toReturn.append(self.get_agent_in_pos(ClassTypes.Pos(i, j), wrap))
-
-        return toReturn
-
-    def get_agent_in_pos(self, pos: ClassTypes.Pos, wrap: bool = False) -> BaseAgent | None:
-        return self._board.agent_get(pos, self.layer, wrap)
-
-    def move(self, relative_pos: ClassTypes.Pos) -> bool:
-        calculatedPos = self.pos + relative_pos
-
-        if ClassTypes.CollisionType.WALL in self.checkCollisions(calculatedPos):
-            print(f"Wall collision {self.pos} -> {calculatedPos}")
-            return False
-
-        self.next_pos = calculatedPos
-        self._board.layers[self.layer][self.pos.toIndex(self._board.width)] = self
-
-    def checkCollisions(self, pos: ClassTypes.Pos) -> list[ClassTypes.CollisionType]:
-        '''Test for collisions at a position'''
-        # TODO move this to board. Make the call to board checkCollisions, and send the agent's parameters
-
-        collisions = self._board.layer_collisions.collision_map[self.layer]
-
-        toReturn: list[ClassTypes.CollisionType] = []
-
-        index = pos.toIndex(self._board.width)
-
-        for collision in collisions.collisions:
-            agentInPos = self._board.layers[collision.layer][index]
-            if agentInPos is not None:
-                toReturn.append(collision.collision_type)
-
-        return toReturn
-
-class StaticAgent(BaseAgent):
-    '''
-    An agent that does not get updated.
-
-    Can be used for walls, points, etc.
-    '''
-    pass
+    def __init__(self):
+        global simulatedAgentList, staticAgentList
+        self.total = len(simulatedAgentList) + len(staticAgentList)
+        self.simulated = simulatedAgentList
+        self.static = staticAgentList

@@ -1,8 +1,32 @@
-from setuptools import setup, find_packages
+from setuptools import setup, Extension, find_packages
+from setuptools.command.build_ext import build_ext
+import sys
+import setuptools
+import pybind11
+
+__version__ = '0.3.0'
+
+def get_pybind_include(user=False):
+    return pybind11.get_include(user)
+
+# Define Pybind11 extension
+ext_modules = [
+    Extension(
+        'fastautomata_clib',
+        ['fastautomata/include/fastautomata/bindings.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True),
+            'pybind11/include'
+        ],
+        language='c++'
+    ),
+]
 
 setup(
     name="fast-automata",
-    version="0.2",
+    version=__version__,
     packages=find_packages(),
     author="Alejandro Fernandez",
     author_email="alexfh2001@gmail.com",
