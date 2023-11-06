@@ -137,7 +137,7 @@ class LocalDraw():
         '''
 
         if symbol == key.N:
-            self.step(0)  # Call step method
+            self.step()  # Call step method
         elif symbol == key.R:
             self.boardReset()  # Call boardReset method
         elif symbol == key.P:
