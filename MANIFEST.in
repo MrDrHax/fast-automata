@@ -1,3 +1,2 @@
-include fastautomata_clib.pyi
-recursive-include pybind11 *
+include fastautomata/fastautomata_clib.pyi
 recursive-include fastautomata/include *

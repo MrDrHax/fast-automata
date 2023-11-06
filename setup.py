@@ -12,13 +12,12 @@ def get_pybind_include(user=False):
 # Define Pybind11 extension
 ext_modules = [
     Extension(
-        'fastautomata_clib',
+        'fastautomata.fastautomata_clib',
         ['fastautomata/include/fastautomata/bindings.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             get_pybind_include(),
             get_pybind_include(user=True),
-            os.path.join(os.path.dirname(__file__), 'pybind11', 'include'),
         ],
         language='c++'
     ),
@@ -31,6 +30,10 @@ setup(
     author="Alejandro Fernandez",
     author_email="alexfh2001@gmail.com",
     description="A 'fast' library for cellular automata simulations. I was just done with mesa and it's confusing/restrictive api.",
+    package_data={
+        '': ['*.pyi'],  # Include all .pyi files
+        'fastautomata': ['fastautomata_clib.pyi'],  # Include specific .pyi file
+    },
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/MrDrHax/fast-automata",
