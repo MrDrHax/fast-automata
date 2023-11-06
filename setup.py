@@ -1,6 +1,6 @@
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-import sys
+import sys, os
 import setuptools
 import pybind11
 
@@ -18,7 +18,7 @@ ext_modules = [
             # Path to pybind11 headers
             get_pybind_include(),
             get_pybind_include(user=True),
-            'pybind11/include'
+            os.path.join(os.path.dirname(__file__), 'pybind11', 'include'),
         ],
         language='c++'
     ),
@@ -34,7 +34,8 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/MrDrHax/fast-automata",
-    install_requires=["pyglet", "pydantic"],
+    install_requires=["pyglet", "pydantic", "pybind11"],
     python_requires='>=3.10',
     license="GPLv3",
+    ext_modules = ext_modules,
 )
