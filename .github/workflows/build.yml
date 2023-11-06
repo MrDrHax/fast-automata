@@ -17,14 +17,14 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install pybind11
-      run: sudo apt-get install -y pybind11-dev
-
     - name: Install cibuildwheel
-      run: python -m pip install cibuildwheel pybind11
+      run: python -m pip install cibuildwheel
 
     - name: Build wheels
-      run: python -m cibuildwheel --output-dir wheelhouse
+      run: |
+        python -m cibuildwheel --output-dir wheelhouse
+      env:
+        CIBW_BEFORE_BUILD: pip install pybind11
 
     - name: Upload wheels as artifacts
       uses: actions/upload-artifact@v2
