@@ -33,13 +33,14 @@ class SimulatedAgent(fastautomata_clib.Agent):
     A pythonic wrapper for the agents in the simulation
     '''
 
-    def __init__(self, board: Board, pos: Pos, state: int, layer: int = 0, allowOverriding: bool = False):
+    def __init__(self, board: Board, pos: Pos, state: str, layer: int = 0, allowOverriding: bool = False):
         super().__init__(board, pos, state, layer, allowOverriding)
         simulatedAgentList.append(self)
 
     def kill(self):
-        super().kill()
+        agent = self # keep in memory long enough to remove from list
         simulatedAgentList.remove(self)
+        super().kill()
 
     def step(self) -> None:
         logger.error("You have not overriden the simulated agent!!!!")
@@ -59,8 +60,10 @@ class StaticAgent(fastautomata_clib.BaseAgent):
         staticAgentList.append(self)
 
     def kill(self):
-        super().kill()
+        agent = self # keep in memory long enough to remove from list
         staticAgentList.remove(self)
+        super().kill()
+
 
     def __str__(self) -> str:
         return f"StaticAgent at {self.pos}"

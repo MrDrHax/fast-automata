@@ -231,4 +231,22 @@ namespace fastautomata::Agents {
             step_end
         );
     }
+
+    void PyAgent::kill()
+    {
+        PYBIND11_OVERLOAD(
+            void,
+            Agent,
+            kill
+        );
+    }
+
+    void BaseAgentPy::kill()
+    {
+        PYBIND11_OVERLOAD(
+            void,
+            BaseAgent,
+            kill
+        );
+    }
 }

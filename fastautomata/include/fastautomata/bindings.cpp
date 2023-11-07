@@ -43,7 +43,7 @@ PYBIND11_MODULE(fastautomata_clib, m) {
         .def_readwrite("on_add", &SimulatedBoard::on_add)
         .def_readwrite("on_delete", &SimulatedBoard::on_delete);
 
-    py::class_<BaseAgent>(m, "BaseAgent", py::dynamic_attr())
+    py::class_<BaseAgent, BaseAgentPy>(m, "BaseAgent", py::dynamic_attr())
         .def(py::init<>(), py::return_value_policy::reference_internal)
         .def(py::init<SimulatedBoard*, Pos, std::string, int, bool>(), py::return_value_policy::reference_internal)
         .def_property("pos",

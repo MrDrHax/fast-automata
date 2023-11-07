@@ -6,8 +6,8 @@ class SimulatedBoard(fastautomata_clib.SimulatedBoard):
     '''
     specialValues: dict[str, any] = {}
 
-    def __init__(self, width: int, height: int, states: int):
-        super().__init__(width, height, states)
+    def __init__(self, width: int, height: int, layers: int):
+        super().__init__(width, height, layers)
         self.specialValues = {}
 
     def __str__(self) -> str:

@@ -102,7 +102,7 @@ namespace fastautomata::Agents{
          * @brief Delete the agent from the board. 
          * 
          */
-        void kill();
+        virtual void kill();
 
         /**
          * @brief Check if there is a collision in the position
@@ -114,6 +114,14 @@ namespace fastautomata::Agents{
          */
         bool checkCollisions(CollisionType type, Pos seachIn);
         virtual ~BaseAgent() = default;
+    };
+
+    class BaseAgentPy: public BaseAgent
+    {
+        public:
+        using BaseAgent::BaseAgent;
+
+        void kill() override;
     };
 
     /**
@@ -198,5 +206,6 @@ namespace fastautomata::Agents{
 
         void step() override;
         void step_end() override;
+        void kill() override;
     };
 }

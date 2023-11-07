@@ -45,7 +45,7 @@ setup(
     description="A 'fast' library for cellular automata simulations. I was just done with mesa and it's confusing/restrictive api.",
     package_data={
         '': ['*.pyi'],  # Include all .pyi files
-        'fastautomata': ['fastautomata_clib.pyi'],  # Include specific .pyi file
+        'fastautomata': ['fastautomata_clib.*'],  # Include specific .pyi file
     },
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
