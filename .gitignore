@@ -7,7 +7,4 @@ build/
 
 /.vscode
 
-# remove library files
-*.cpython*
-
 .VSCodeCounter/*
