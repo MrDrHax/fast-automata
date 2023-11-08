@@ -19,6 +19,8 @@ def initialize_agents(board: Board):
     sets the board reset function to resetAgents
     '''
     board.append_on_reset(resetAgents)
+    board.python_on_delete = deleteAgent
+
 
 def resetAgents(board: Board):
     '''
@@ -27,6 +29,14 @@ def resetAgents(board: Board):
     simulatedAgentList.clear()
     staticAgentList.clear()
 
+def deleteAgent(agent: fastautomata_clib.BaseAgent):
+    '''
+    Deletes an agent from the agent lists
+    '''
+    if isinstance(agent, SimulatedAgent):
+        simulatedAgentList.remove(agent)
+    else:
+        staticAgentList.remove(agent)
 
 class SimulatedAgent(fastautomata_clib.Agent):
     '''
@@ -38,8 +48,7 @@ class SimulatedAgent(fastautomata_clib.Agent):
         simulatedAgentList.append(self)
 
     def kill(self):
-        agent = self # keep in memory long enough to remove from list
-        simulatedAgentList.remove(self)
+        # simulatedAgentList.remove(self)
         super().kill()
 
     def step(self) -> None:
@@ -60,8 +69,7 @@ class StaticAgent(fastautomata_clib.BaseAgent):
         staticAgentList.append(self)
 
     def kill(self):
-        agent = self # keep in memory long enough to remove from list
-        staticAgentList.remove(self)
+        # staticAgentList.remove(self)
         super().kill()
 
 

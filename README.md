@@ -6,23 +6,9 @@ It was built based on mesa. I hated that, so I decided to build this.
 
 to get started:
 
-(start a grid and move them right)
-```py
-from fastautomata import LocalDraw, Board, Agents, ClassTypes
+Download the repo, and install.
 
-class costomAgent(Agents.Agent):
-    def step(self):
-        self.next_pos = self.pos + ClassTypes.Pos(1, 0)
-
-playBoard = Board.SimulatedBoard(50, 50, 1)
-
-drawEngine = LocalDraw.LocalDraw(playBoard, 800, 800)
-
-dude = costomAgent(ClassTypes.Pos(5,5), "Alive", playBoard)
-dude2 = costomAgent(ClassTypes.Pos(10,10), "Alive", playBoard)
-
-drawEngine.run()
-```
+As of now, you may need to have visual studio installed. Pybind requires it, and I suck at packaging c++ libraries. Python version 3.8 and 3.10 have been tested, but 3.10+ should work. 
 
 > This is one of the first versions. i need to make an api plugin. I would also like to add gpu acceleration or something.
 
@@ -60,6 +46,20 @@ playBoard = Board.SimulatedBoard(10, 10, 1) # layers cannot be < 1
 Once you have your board, you might want to create a costume SimulatedAgent. 
 
 FastAutomata has 2 types of agents: Static and Simulated.
+
+### Agents
+
+Everything inside the board is an agent. If you need to do anything, agents is the way to go.
+
+To start agents, you need to call the function:
+
+```py
+Agents.initialize_agents(playBoard)
+```
+
+I hate that I need this, but this helps with deleting agents and keeping things nice and tight.
+
+Please add this at the end of the attachment process, since it needs to run after everything else has had the change to reset. It might work otherwise, but idk.
 
 ### Static Agents
 
@@ -145,13 +145,15 @@ class CostumeAgent(Agents.SimulatedAgent):
 
 drawEngine = LocalDraw.LocalDraw(playBoard, 800, 800)
 
+Agents.initialize_agents(playBoard)
+
 def generateCells(board: Board.SimulatedBoard): # Note: on_reset gives a reference to a board. 
     for y in range(board.getHeight()):
         CostumeAgent(board, Pos(0, y), "Alive")
 
 playBoard.append_on_reset(generateCells)
 
-generateCells(playBoard)
+generateCells(playBoard) # Will get deleted on the future, where the onReset() will get called when a Engine gets started. 
 
 drawEngine.run()
 ```
@@ -186,3 +188,12 @@ If you try to change the pos of an object, and it contains a collision, the obje
 
 Some stuff was not added to a pythonic way of working. Use Clib if you don't find something. Sorry, working on fixing it.
 
+### Special Values
+
+The board has an dictionary called specialValues This dictionary has updatable variables that can be used anywhere (for example: a generator with certain parameters).
+
+As of now, the only use is to set the desired framerate of the simulation. But later more things can be added. To update values run: `board.specialValues["draw_framerate"] = 0.2 # will run every 0.2 secs`.
+
+> (TBA) There will be a visualizer of the values to make sure you can edit them. Still have to decide if i want to use pyglet or tkinter. Maybe even flutter XD. 
+> (TBA) Sliders and config values will be able to add many things. I want to support a float init, end, step kind of config, a enter anything you want and call a function to validate input, and a multiple choice.
+> 

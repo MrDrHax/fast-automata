@@ -41,11 +41,12 @@ PYBIND11_MODULE(fastautomata_clib, m) {
         .def_readwrite("color_map", &SimulatedBoard::color_map)
         .def_readwrite("on_reset", &SimulatedBoard::on_reset)
         .def_readwrite("on_add", &SimulatedBoard::on_add)
-        .def_readwrite("on_delete", &SimulatedBoard::on_delete);
+        .def_readwrite("on_delete", &SimulatedBoard::on_delete)
+        .def_readwrite("python_on_delete", &SimulatedBoard::python_on_delete);
 
-    py::class_<BaseAgent, BaseAgentPy>(m, "BaseAgent", py::dynamic_attr())
-        .def(py::init<>(), py::return_value_policy::reference_internal)
-        .def(py::init<SimulatedBoard*, Pos, std::string, int, bool>(), py::return_value_policy::reference_internal)
+    py::class_<BaseAgent, BaseAgentPy>(m, "BaseAgent")
+        .def(py::init<>(), py::return_value_policy::take_ownership)
+        .def(py::init<SimulatedBoard*, Pos, std::string, int, bool>(), py::return_value_policy::take_ownership)
         .def_property("pos",
             py::cpp_function(&BaseAgent::getPos, py::return_value_policy::copy),
             py::cpp_function())
@@ -56,9 +57,9 @@ PYBIND11_MODULE(fastautomata_clib, m) {
         .def_readonly("board", &BaseAgent::board)
         .def("checkCollisions", &BaseAgent::checkCollisions);
 
-    py::class_<Agent, BaseAgent, PyAgent>(m, "Agent", py::dynamic_attr())
-        .def(py::init<>(), py::return_value_policy::reference_internal)
-        .def(py::init<fastautomata::Board::SimulatedBoard*, fastautomata::ClassTypes::Pos, std::string, int, bool>(), py::return_value_policy::reference_internal)
+    py::class_<Agent, BaseAgent, PyAgent>(m, "Agent")
+        .def(py::init<>(), py::return_value_policy::take_ownership)
+        .def(py::init<fastautomata::Board::SimulatedBoard*, fastautomata::ClassTypes::Pos, std::string, int, bool>(), py::return_value_policy::take_ownership)
         .def("step", &Agent::step)
         .def("step_end", &Agent::step_end)
         .def_property("pos",

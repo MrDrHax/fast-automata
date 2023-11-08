@@ -95,6 +95,12 @@ namespace fastautomata::Agents {
         this->layer = layer;
         this->state = state;
 
+        if (this->board->color_map.find(state) == this->board->color_map.end())
+        {
+            std::cout << "WARNING: State '" << state << "' does not exist in the color map. It will be added with a random color." << std::endl;
+            this->board->addColor(state, this->board->getRandomColor());
+        }
+
         this->board->agent_add(this, allowOverriding);
     }
 

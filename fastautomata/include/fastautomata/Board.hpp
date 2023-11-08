@@ -88,6 +88,18 @@ namespace fastautomata::Board {
         std::vector<std::function<void(Agents::BaseAgent*)>> on_delete;
 
         /**
+         * @brief Python is... special...
+         * 
+         */
+        std::function<void(Agents::BaseAgent*)> python_on_delete;
+
+        /**
+         * @brief A list of agents that will be deleted at the end of the step
+         * 
+         */
+        std::vector<Agents::BaseAgent*> scheduled_delete_agents;
+
+        /**
          * @brief Construct a new Simulated Board object
          * 
          * @param width 
@@ -121,6 +133,9 @@ namespace fastautomata::Board {
 
             this->step_instructions.push_back(SimulatedBoard::update_agents);
             this->step_instructions.push_back(SimulatedBoard::update_agents_end);
+            this->step_instructions.push_back(SimulatedBoard::scheduled_delete);
+
+            this->scheduled_delete_agents = std::vector<Agents::BaseAgent*>();
 
             // std::cout << "INFO: Created board with width: " << width << ", height: " << height << ", layers: " << layerCount << std::endl;
         }
@@ -251,12 +266,22 @@ namespace fastautomata::Board {
             }
         }
 
+        /**
+         * @brief Step through an iteration of the simulation
+         * 
+         * The steps to run are defined by step_instructions
+         * 
+         */
         void step()
         {
             auto start = std::chrono::high_resolution_clock::now();
             // Call step instructions
+
+            auto step = 0;
+
             for (auto func : this->step_instructions)
             {
+                std::cout << "INFO: Calling step instruction: " << step++ << std::endl;
                 func(this);
             }
 
@@ -401,31 +426,59 @@ namespace fastautomata::Board {
          */
         void agent_remove(Agents::BaseAgent* agent)
         {
-            // remove agent from board
-            this->board[agent->getLayer()][agent->getPos().toIndex(this->width)] = nullptr;
+            this->scheduled_delete_agents.push_back(agent);
+        }
 
-            // check if agent is simulated Agent
-            Agents::Agent* simulatedAgent = dynamic_cast<Agents::Agent*>(agent);
-            if (simulatedAgent != nullptr)
+        /**
+         * @brief Remove agents that have been scheduled for deletion. 
+         * 
+         * @param board The board (this is a static method)
+         */
+        static void scheduled_delete(SimulatedBoard* board)
+        {
+            for (auto agent : board->scheduled_delete_agents)
             {
-                // remove agent from agents
-                for (int i = 0; i < this->agents.size(); i++)
+                board->color_map_count[agent->getState()] -= 1;
+                std::cout << "INFO: Removing agent (id: " << std::to_string(agent->getId()) << "). Address; " << static_cast<void*>(agent) << std::endl;
+                // remove agent from board
+                board->board[agent->getLayer()][agent->getPos().toIndex(board->width)] = nullptr;
+
+                std::cout << "INFO: Removed agent from board" << std::endl;
+                // check if agent is simulated Agent
+                Agents::Agent* simulatedAgent = dynamic_cast<Agents::Agent*>(agent);
+                if (simulatedAgent != nullptr)
                 {
-                    if (this->agents[i] == simulatedAgent)
+                    // remove agent from agents
+                    for (int i = 0; i < board->agents.size(); i++)
                     {
-                        this->agents.erase(this->agents.begin() + i);
-                        break;
+                        if (board->agents[i] == simulatedAgent)
+                        {
+                            board->agents.erase(board->agents.begin() + i);
+                            std::cout << "INFO: Removed agent from simulation loop." << std::endl;
+                            break;
+                        }
                     }
                 }
+
+                // call on_delete functions
+                for (auto func : board->on_delete)
+                {
+                    func(agent);
+                }
+
+                if (board->python_on_delete != nullptr)
+                {
+                    board->python_on_delete(agent);
+                }
+                else
+                {
+                    delete agent;
+                }
+
+                std::cout << "INFO: deleted agent no problems" << std::endl;
             }
 
-            // call on_delete functions
-            for (auto func : this->on_delete)
-            {
-                func(agent);
-            }
-
-            delete agent;
+            board->scheduled_delete_agents.clear();
         }
 
         /**
@@ -435,20 +488,23 @@ namespace fastautomata::Board {
          */
         static void update_agents(Board::SimulatedBoard* board)
         {
+            std::cout << "INFO: Updating agents" << std::endl;
             for (int i = 0; i < board->agents.size(); i++)
             {
                 auto agent = board->agents[i];
 
                 try
                 {
-                    // std::cout << "INFO: Updating agent (id: " << std::to_string(agent->getId()) << "). Address; " << static_cast<void*>(agent) << std::endl;
+                    std::cout << "INFO: Updating agent (id: " << std::to_string(agent->getId()) << "). Address: " << static_cast<void*>(agent) << std::endl;
                     agent->step();
+                    std::cout << "INFO: Finished" << std::endl;
                 }
                 catch(const std::exception& e)
                 {
                     std::cout << "ERROR: When stepping through agents: " << e.what() << std::endl;
                 }
             }
+            std::cout << "INFO: Updating agents finished" << std::endl;
 
             // const int num_threads = std::thread::hardware_concurrency();
 
@@ -488,12 +544,12 @@ namespace fastautomata::Board {
          */
         static void update_agents_end(Board::SimulatedBoard* board)
         {
-            // std::cout << "INFO: Updating agents, step: end" << std::endl;
+            std::cout << "INFO: Updating agents, step: end" << std::endl;
             for (auto agent : board->agents)
             {
                 agent->step_end();
             }
-            // std::cout << "INFO: Finished updating agents, step: end. Updated: " << board->agents.size() << std::endl;
+            std::cout << "INFO: Finished updating agents, step: end. Updated: " << board->agents.size() << std::endl;
         }
 
         void step_instructions_add(std::function<void(SimulatedBoard*)> func)
@@ -567,6 +623,8 @@ namespace fastautomata::Board {
             return collisions;
         }
 
+        /// @brief Create a random color
+        /// @return A random color in rgb format
         static std::array<int, 3> getRandomColor()
         {
             return std::array<int, 3>{rand() % 255, rand() % 255, rand() % 255};

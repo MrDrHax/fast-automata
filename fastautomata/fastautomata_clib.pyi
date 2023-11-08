@@ -207,6 +207,10 @@ class SimulatedBoard:
 
     WARNING: Using .append() will not work. Use .append_on_delete() instead.
     '''
+    python_on_delete: Callable[[BaseAgent],None]
+    '''
+    A function to call the python delete. Since you know, python really likes to take out the trash...
+    '''
     on_reset: list[Callable[[SimulatedBoard],None]]
     '''
     A list of functions that will get called when the board gets reset.
