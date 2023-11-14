@@ -19,6 +19,15 @@ namespace fastautomata::Board {
      */
     class SimulatedBoard
     {
+        /*
+        ██    ██  █████  ██████  ██  █████  ██████  ██      ███████ ███████ 
+        ██    ██ ██   ██ ██   ██ ██ ██   ██ ██   ██ ██      ██      ██      
+        ██    ██ ███████ ██████  ██ ███████ ██████  ██      █████   ███████ 
+         ██  ██  ██   ██ ██   ██ ██ ██   ██ ██   ██ ██      ██           ██ 
+          ████   ██   ██ ██   ██ ██ ██   ██ ██████  ███████ ███████ ███████ 
+                                                                          
+                                                                            
+        */
         private:
         int width;
         int height;
@@ -99,6 +108,14 @@ namespace fastautomata::Board {
          */
         std::vector<Agents::BaseAgent*> scheduled_delete_agents;
 
+        /*
+         ██████  ██████  ███    ██ ███████ ████████ ██████  ██    ██  ██████ ████████  ██████  ██████  ███████ 
+        ██      ██    ██ ████   ██ ██         ██    ██   ██ ██    ██ ██         ██    ██    ██ ██   ██ ██      
+        ██      ██    ██ ██ ██  ██ ███████    ██    ██████  ██    ██ ██         ██    ██    ██ ██████  ███████ 
+        ██      ██    ██ ██  ██ ██      ██    ██    ██   ██ ██    ██ ██         ██    ██    ██ ██   ██      ██ 
+         ██████  ██████  ██   ████ ███████    ██    ██   ██  ██████   ██████    ██     ██████  ██   ██ ███████ 
+        */
+
         /**
          * @brief Construct a new Simulated Board object
          * 
@@ -138,30 +155,79 @@ namespace fastautomata::Board {
             this->scheduled_delete_agents = std::vector<Agents::BaseAgent*>();
 
             // std::cout << "INFO: Created board with width: " << width << ", height: " << height << ", layers: " << layerCount << std::endl;
+
+            this->layer_collisions = CollisionMap(layerCount);
         }
 
         /**
          * @brief Destroy the Simulated Board object
          * 
          */
+        // ~SimulatedBoard()
+        // {
+        //     // clear board
+        //     for (int i = 0; i < this->layerCount; i++)
+        //     {
+        //         for (int j = 0; j < this->agentSize; j++)
+        //         {
+        //             // if (this->board[i][j] != nullptr)
+        //             // {
+        //             //     delete this->board[i][j];
+        //             // }
+        //         }
+        //         delete[] this->board[i];
+        //     }
+        //     delete[] this->board;
+
+        //     // clear agents
+        //     this->agents.clear();
+        // }
         ~SimulatedBoard()
+        {
+            //this->delete_this();
+        }
+
+        void delete_this()
         {
             // clear board
             for (int i = 0; i < this->layerCount; i++)
             {
-                for (int j = 0; j < this->agentSize; j++)
-                {
-                    if (this->board[i][j] != nullptr)
-                    {
-                        delete this->board[i][j];
-                    }
-                }
+                // for (int j = 0; j < this->agentSize; j++)
+                // {
+                //     if (this->board[i][j] != nullptr)
+                //     {
+                //         delete this->board[i][j];
+                //     }
+                // }
+
+                // only delete the pointer list, and let python take care of everything else
                 delete[] this->board[i];
             }
             delete[] this->board;
 
-            // clear agents
+            // clear all lists (do not delete tho)
             this->agents.clear();
+            this->step_instructions.clear();
+            this->on_add.clear();
+            this->on_delete.clear();
+            this->on_reset.clear();
+            this->scheduled_delete_agents.clear();
+            this->color_map.clear();
+            this->color_map_count.clear();
+
+        }
+
+        /*
+         ██████  ███████ ████████         ██     ███████ ███████ ████████ 
+        ██       ██         ██           ██      ██      ██         ██    
+        ██   ███ █████      ██          ██       ███████ █████      ██    
+        ██    ██ ██         ██         ██             ██ ██         ██    
+         ██████  ███████    ██        ██         ███████ ███████    ██                              
+        */
+
+        int getStepCount()
+        {
+            return this->step_count;
         }
 
         void append_on_reset(std::function<void(SimulatedBoard*)> func)
@@ -209,11 +275,104 @@ namespace fastautomata::Board {
             return this->layerCount;
         }
 
+        /**
+         * @brief Add a color to the simulation (state)
+         * 
+         * @param name The state
+         * @param color The color that will be used
+         */
         void addColor(std::string name, std::array<int, 3> color)
         {
             this->color_map[name] = color;
             this->color_map_count[name] = 0;
         }
+
+        /**
+         * @brief Add an instruction to the steps that will be executed each step
+         * 
+         * @param func 
+         */
+        void step_instructions_add(std::function<void(SimulatedBoard*)> func)
+        {
+            this->step_instructions.push_back(func);
+        }
+
+        /**
+         * @brief remove all the step instructions
+         */
+        void step_instructions_flush()
+        {
+            this->step_instructions.clear();
+        }
+
+        /**
+         * @brief Get the Collisions of an agent from given layer. Returns a map of layers to collision types.
+         * 
+         * @param pos The position to check collisions for
+         * @param layer The layer from where to check collisions 
+         * @param includeSelf If true, returns it's own layer as well
+         * @return std::map<int, std::tuple<ClassTypes::CollisionType, Agents::BaseAgent*>> 
+         */
+        std::map<int, std::tuple<ClassTypes::CollisionType, Agents::BaseAgent*>> getCollisions(ClassTypes::Pos pos, int layer = 0, bool includeSelf = true)
+        {
+            if (pos.x < 0 || pos.y < 0 || pos.x >= this->width || pos.y >= this->height)
+            {
+                throw std::out_of_range("Position out of range when trying to check for collisions. (Pos given: " + pos.toString() + ")");
+            }
+
+            std::map<int, std::tuple<ClassTypes::CollisionType, Agents::BaseAgent*>> collisions;
+
+            // std::cout << "INFO: Getting collisions for pos: " << pos.toString() << ", layer: " << std::to_string(layer) << ", includeSelf: " << includeSelf << std::endl;
+            for (int searchLayer = 0; searchLayer < this->layerCount; searchLayer++)
+            {
+                if (searchLayer == layer)
+                {
+                    // std::cout << "INFO: Skipping layer: " << std::to_string(searchLayer) << std::endl;
+                    if (includeSelf)
+                    {
+                        auto agent = this->agent_get(pos, searchLayer);
+                        bool agentExists = agent != nullptr;
+                        // std::cout << "INFO: Agent exists: " << std::to_string(agentExists) << std::endl;
+                        if (agent != nullptr)
+                        {
+                            collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::SOLID, agent);
+                        }
+                        else
+                        {
+                            collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::NONE, nullptr);
+                        }
+                    }
+                    else
+                    {
+                        collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::NONE, nullptr);
+                    }
+                    // return NONE collision for self... This will ensure map has all objects. 
+                    continue;
+                }
+
+                auto agent = this->agent_get(pos, searchLayer);
+                if (agent != nullptr)
+                {
+                    auto collision = layer_collisions.getCollision(layer, searchLayer);
+
+                    collisions[searchLayer] = std::make_tuple(collision, agent);
+                }
+                else
+                {
+                    collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::NONE, nullptr);
+                }
+            }
+
+            return collisions;
+        }
+
+        /*
+        ██    ██ ██████  ██████   █████  ████████ ██ ███    ██  ██████  
+        ██    ██ ██   ██ ██   ██ ██   ██    ██    ██ ████   ██ ██       
+        ██    ██ ██████  ██   ██ ███████    ██    ██ ██ ██  ██ ██   ███ 
+        ██    ██ ██      ██   ██ ██   ██    ██    ██ ██  ██ ██ ██    ██ 
+         ██████  ██      ██████  ██   ██    ██    ██ ██   ████  ██████  
+        */
 
         /**
          * @brief Update the index of a new and old state in the color map. This assumes you did a color check first
@@ -233,13 +392,13 @@ namespace fastautomata::Board {
             // Delete and recreate board
             for (int i = 0; i < this->layerCount; i++)
             {
-                for (int j = 0; j < this->agentSize; j++)
-                {
-                    if (this->board[i][j] != nullptr)
-                    {
-                        delete this->board[i][j];
-                    }
-                }
+                // for (int j = 0; j < this->agentSize; j++)
+                // {
+                //     if (this->board[i][j] != nullptr)
+                //     {
+                //         delete this->board[i][j];
+                //     }
+                // }
                 delete[] this->board[i];
             }
             delete[] this->board;
@@ -258,6 +417,12 @@ namespace fastautomata::Board {
 
             // Flush the agents
             this->agents.clear();
+
+            // reset the count
+            for (auto& kv : this->color_map_count)
+            {
+                kv.second = 0;
+            }
 
             // Call on_reset functions
             for (auto func : this->on_reset)
@@ -281,7 +446,7 @@ namespace fastautomata::Board {
 
             for (auto func : this->step_instructions)
             {
-                std::cout << "INFO: Calling step instruction: " << step++ << std::endl;
+                // std::cout << "INFO: Calling step instruction: " << step++ << std::endl;
                 func(this);
             }
 
@@ -290,8 +455,16 @@ namespace fastautomata::Board {
 
             auto end = std::chrono::high_resolution_clock::now();
 
-            std::cout << "INFO: Step took: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+            // std::cout << "INFO: Step took: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
         }
+
+        /*
+         █████   ██████  ███████ ███    ██ ████████ ███████ 
+        ██   ██ ██       ██      ████   ██    ██    ██      
+        ███████ ██   ███ █████   ██ ██  ██    ██    ███████ 
+        ██   ██ ██    ██ ██      ██  ██ ██    ██         ██ 
+        ██   ██  ██████  ███████ ██   ████    ██    ███████ 
+        */
 
         /**
          * @brief Get an agent at a position
@@ -426,8 +599,24 @@ namespace fastautomata::Board {
          */
         void agent_remove(Agents::BaseAgent* agent)
         {
+            // check if agent is not already schedlued for deletion
+            for (auto scheduledAgent : this->scheduled_delete_agents)
+            {
+                if (scheduledAgent == agent)
+                {
+                    return;
+                }
+            }
             this->scheduled_delete_agents.push_back(agent);
         }
+
+        /*
+        ███████ ████████  █████  ████████ ██  ██████ 
+        ██         ██    ██   ██    ██    ██ ██      
+        ███████    ██    ███████    ██    ██ ██      
+             ██    ██    ██   ██    ██    ██ ██      
+        ███████    ██    ██   ██    ██    ██  ██████ 
+        */
 
         /**
          * @brief Remove agents that have been scheduled for deletion. 
@@ -439,11 +628,11 @@ namespace fastautomata::Board {
             for (auto agent : board->scheduled_delete_agents)
             {
                 board->color_map_count[agent->getState()] -= 1;
-                std::cout << "INFO: Removing agent (id: " << std::to_string(agent->getId()) << "). Address; " << static_cast<void*>(agent) << std::endl;
+                // std::cout << "INFO: Removing agent (id: " << std::to_string(agent->getId()) << "). Address; " << static_cast<void*>(agent) << std::endl;
                 // remove agent from board
                 board->board[agent->getLayer()][agent->getPos().toIndex(board->width)] = nullptr;
 
-                std::cout << "INFO: Removed agent from board" << std::endl;
+                // std::cout << "INFO: Removed agent from board" << std::endl;
                 // check if agent is simulated Agent
                 Agents::Agent* simulatedAgent = dynamic_cast<Agents::Agent*>(agent);
                 if (simulatedAgent != nullptr)
@@ -454,7 +643,7 @@ namespace fastautomata::Board {
                         if (board->agents[i] == simulatedAgent)
                         {
                             board->agents.erase(board->agents.begin() + i);
-                            std::cout << "INFO: Removed agent from simulation loop." << std::endl;
+                            // std::cout << "INFO: Removed agent from simulation loop." << std::endl;
                             break;
                         }
                     }
@@ -475,7 +664,7 @@ namespace fastautomata::Board {
                     delete agent;
                 }
 
-                std::cout << "INFO: deleted agent no problems" << std::endl;
+                // std::cout << "INFO: deleted agent no problems" << std::endl;
             }
 
             board->scheduled_delete_agents.clear();
@@ -488,23 +677,23 @@ namespace fastautomata::Board {
          */
         static void update_agents(Board::SimulatedBoard* board)
         {
-            std::cout << "INFO: Updating agents" << std::endl;
+            // std::cout << "INFO: Updating agents" << std::endl;
             for (int i = 0; i < board->agents.size(); i++)
             {
                 auto agent = board->agents[i];
 
                 try
                 {
-                    std::cout << "INFO: Updating agent (id: " << std::to_string(agent->getId()) << "). Address: " << static_cast<void*>(agent) << std::endl;
+                    // std::cout << "INFO: Updating agent (id: " << std::to_string(agent->getId()) << "). Address: " << static_cast<void*>(agent) << std::endl;
                     agent->step();
-                    std::cout << "INFO: Finished" << std::endl;
+                    // std::cout << "INFO: Finished" << std::endl;
                 }
                 catch(const std::exception& e)
                 {
                     std::cout << "ERROR: When stepping through agents: " << e.what() << std::endl;
                 }
             }
-            std::cout << "INFO: Updating agents finished" << std::endl;
+            // std::cout << "INFO: Updating agents finished" << std::endl;
 
             // const int num_threads = std::thread::hardware_concurrency();
 
@@ -544,83 +733,12 @@ namespace fastautomata::Board {
          */
         static void update_agents_end(Board::SimulatedBoard* board)
         {
-            std::cout << "INFO: Updating agents, step: end" << std::endl;
+            // std::cout << "INFO: Updating agents, step: end" << std::endl;
             for (auto agent : board->agents)
             {
                 agent->step_end();
             }
-            std::cout << "INFO: Finished updating agents, step: end. Updated: " << board->agents.size() << std::endl;
-        }
-
-        void step_instructions_add(std::function<void(SimulatedBoard*)> func)
-        {
-            this->step_instructions.push_back(func);
-        }
-
-        void step_instructions_flush(std::function<void(SimulatedBoard*)> func)
-        {
-            this->step_instructions.clear();
-        }
-
-        /**
-         * @brief Get the Collisions of an agent from given layer. Returns a map of layers to collision types.
-         * 
-         * @param pos The position to check collisions for
-         * @param layer The layer from where to check collisions 
-         * @param includeSelf If true, returns it's own layer as well
-         * @return std::map<int, std::tuple<ClassTypes::CollisionType, Agents::BaseAgent*>> 
-         */
-        std::map<int, std::tuple<ClassTypes::CollisionType, Agents::BaseAgent*>> getCollisions(ClassTypes::Pos pos, int layer = 0, bool includeSelf = true)
-        {
-            if (pos.x < 0 || pos.y < 0 || pos.x >= this->width || pos.y >= this->height)
-            {
-                throw std::out_of_range("Position out of range");
-            }
-
-            std::map<int, std::tuple<ClassTypes::CollisionType, Agents::BaseAgent*>> collisions;
-
-            // std::cout << "INFO: Getting collisions for pos: " << pos.toString() << ", layer: " << std::to_string(layer) << ", includeSelf: " << includeSelf << std::endl;
-            for (int searchLayer = 0; searchLayer < this->layerCount; searchLayer++)
-            {
-                if (searchLayer == layer)
-                {
-                    // std::cout << "INFO: Skipping layer: " << std::to_string(searchLayer) << std::endl;
-                    if (includeSelf)
-                    {
-                        auto agent = this->agent_get(pos, searchLayer);
-                        bool agentExists = agent != nullptr;
-                        // std::cout << "INFO: Agent exists: " << std::to_string(agentExists) << std::endl;
-                        if (agent != nullptr)
-                        {
-                            collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::SOLID, agent);
-                        }
-                        else
-                        {
-                            collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::NONE, nullptr);
-                        }
-                    }
-                    else
-                    {
-                        collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::NONE, nullptr);
-                    }
-                    // return NONE collision for self... This will ensure map has all objects. 
-                    continue;
-                }
-
-                auto agent = this->agent_get(pos, searchLayer);
-                if (agent != nullptr)
-                {
-                    auto collision = layer_collisions.getCollision(layer, searchLayer);
-
-                    collisions[searchLayer] = std::make_tuple(collision, agent);
-                }
-                else
-                {
-                    collisions[searchLayer] = std::make_tuple(ClassTypes::CollisionType::NONE, nullptr);
-                }
-            }
-
-            return collisions;
+            // std::cout << "INFO: Finished updating agents, step: end. Updated: " << board->agents.size() << std::endl;
         }
 
         /// @brief Create a random color

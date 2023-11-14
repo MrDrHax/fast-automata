@@ -227,6 +227,19 @@ class SimulatedBoard:
 
     To reset use step_instructions_flush
     '''
+    step_count: int
+    '''
+    The number of steps taken by the board.
+
+    READONLY!!!
+    '''
+    def step_instructions_add(func: Callable[[SimulatedBoard],None]) -> None: ...
+    def step_instructions_flush(): ...
+    '''
+    Flush all the step instructions. This will remove all steps taken when a board.step() is called.
+
+    WARNING: This will remove the default step instructions (agent.step, agent.step_end and delete_agents). You will have to add them back manually.
+    '''
     def __init__(self, width: int, height: int, layers: int) -> None: ...
     '''
     Create a new board with width, height, and layers.
@@ -246,7 +259,7 @@ class SimulatedBoard:
         allowOverrides: If true, the agent will replace the other agent in the same pos.
     '''
 
-    def agent_get(self, pos: Pos, layer:int = 1, wrap: bool = False) -> Any: ...
+    def agent_get(self, pos: Pos, layer:int = 1, wrap: bool = False) -> BaseAgent | None: ...
     '''
     Get an agent from the board. 
 
@@ -348,6 +361,8 @@ class SimulatedBoard:
 
     Gets called automatically by a cell.
     '''
+
+    def __del__(self) -> None: ...
 
     @staticmethod
     def update_agents(self) -> None: ...

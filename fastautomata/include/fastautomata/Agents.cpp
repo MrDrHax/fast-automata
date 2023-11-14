@@ -122,7 +122,7 @@ namespace fastautomata::Agents {
             
             // std::cout << "Collision: " << std::to_string(collision) << std::endl;
             // only move if there are no collisions
-            if (!collision)
+            if (!collision && (pos_next->x >= 0 && pos_next->y >= 0) && (pos_next->x < this->board->getWidth() && pos_next->y < this->board->getHeight()))
             {
                 // std::cout << "No problems found for agent id: " << std::to_string(this->getId()) << " to pos: " << (*this->pos_next).toString() << std::endl;
                 board->agent_move(this, this->pos,*this->pos_next);
@@ -203,7 +203,7 @@ namespace fastautomata::Agents {
         {
             for (int i = this->pos.x - radius; i <= this->pos.x + radius; i++)
             {
-                neighbors.push_back(this->board->agent_get(Pos(i,j), this->layer, wrap));
+                neighbors.push_back(this->board->agent_get(Pos(i,j), layer, wrap));
             }
         }
 

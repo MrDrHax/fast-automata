@@ -4,17 +4,14 @@ import pyglet.shapes as shapes
 from pyglet import gl
 
 from . import fastautomata_clib
-
+from .BaseClasses import IControlledAttachment
 from . import Board, ClassTypes, Agents
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-def other(thingy):
-    pass
-
-class LocalDraw():
+class LocalDraw(IControlledAttachment):
     '''
     An attachable object that draws the board on a window.
 
@@ -194,6 +191,7 @@ class LocalDraw():
 
         Use this to let pyglet take control of the app
         '''
+        self.board.reset()
 
         @self.window.event
         def on_draw():

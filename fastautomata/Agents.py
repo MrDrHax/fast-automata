@@ -20,7 +20,14 @@ def initialize_agents(board: Board):
     '''
     board.append_on_reset(resetAgents)
     board.python_on_delete = deleteAgent
+    board.python_delete_agents = delete_agents
 
+def delete_agents():
+    '''
+    deletes all agents from the board
+    '''
+    simulatedAgentList.clear()
+    staticAgentList.clear()
 
 def resetAgents(board: Board):
     '''

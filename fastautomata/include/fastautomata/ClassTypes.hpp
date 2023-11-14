@@ -249,7 +249,7 @@ namespace fastautomata::ClassTypes{
 
         ~CollisionMap()
         {
-            delete[] this->collisions;
+            // delete[] this->collisions;
         }
 
         /**

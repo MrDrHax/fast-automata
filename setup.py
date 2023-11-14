@@ -50,7 +50,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/MrDrHax/fast-automata",
-    install_requires=["pyglet", "pydantic"],
+    install_requires=["pyglet", "pydantic", "fastapi", "uvicorn", "pybind11"],
     python_requires='>=3.10',
     license="GPLv3",
     ext_modules = ext_modules if using_pybind else None,
