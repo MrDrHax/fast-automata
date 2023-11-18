@@ -1,4 +1,4 @@
-import fastautomata_clib
+from fastautomata import fastautomata_clib
 
 # create a board and test it
 board = fastautomata_clib.SimulatedBoard(10, 10, 1)

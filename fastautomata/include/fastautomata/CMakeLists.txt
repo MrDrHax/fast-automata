@@ -8,7 +8,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 find_package(Python3 COMPONENTS Development Interpreter REQUIRED)
 
 # Create a library
-add_library(fastautomata_lib fastautomata.cpp Board.hpp Agents.cpp ClassTypes.hpp)
+add_library(fastautomata_lib fastautomata.cpp Board.cpp Agents.cpp ClassTypes.hpp)
 
 # Add the Python3 include directories to the include path
 target_include_directories(fastautomata_lib PRIVATE ${Python3_INCLUDE_DIRS})
