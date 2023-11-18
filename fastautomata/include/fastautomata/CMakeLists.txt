@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(fastautomata_clib)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 
@@ -21,7 +21,11 @@ find_package(pybind11 REQUIRED)
 pybind11_add_module(fastautomata_clib MODULE bindings.cpp)
 
 # Link the library to the Python module
-target_link_libraries(fastautomata_clib PRIVATE fastautomata_lib stdc++fs)
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    target_link_libraries(fastautomata_clib PRIVATE fastautomata_lib stdc++fs)
+else()
+    target_link_libraries(fastautomata_clib PRIVATE fastautomata_lib)
+endif()
 
 # Set the output directory for the build libraries
 set_target_properties(fastautomata_clib PROPERTIES

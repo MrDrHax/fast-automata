@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <vector>
 #include <map>
+#include <string> 
 
 namespace fastautomata::ClassTypes{
     /**

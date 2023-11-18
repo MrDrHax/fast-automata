@@ -2,7 +2,6 @@
 
 */build/
 build/
-*dist/
 *.egg-info/
 
 /.vscode

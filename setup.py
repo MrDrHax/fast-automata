@@ -11,7 +11,7 @@ try:
     from fastautomata import fastautomata_clib
 
 except ImportError:
-    print("Could not import fastautomata_clib, please install pybind11 and a compiler to compile liraries. Attempting to compile")
+    print("Could not import fastautomata_clib, please install pybind11 and a compiler to compile libraries. Attempting to compile... for more info: ")
 
     import pybind11
 
