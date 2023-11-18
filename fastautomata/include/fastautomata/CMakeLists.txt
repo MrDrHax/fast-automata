@@ -3,6 +3,7 @@ project(fastautomata_clib)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 
 # Find the Python3 package
 find_package(Python3 COMPONENTS Development Interpreter REQUIRED)
