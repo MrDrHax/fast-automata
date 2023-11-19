@@ -3,7 +3,7 @@ from setuptools.command.build_ext import build_ext
 import sys, os
 import setuptools
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 using_pybind = False
 
@@ -11,7 +11,7 @@ try:
     from fastautomata import fastautomata_clib
 
 except ImportError:
-    print("Could not import fastautomata_clib, please install pybind11 and a compiler to compile libraries. Attempting to compile... for more info: ")
+    print("Could not import fastautomata_clib, please install pybind11 and a compiler to compile libraries. Attempting to compile... for more info, visit: https://github.com/MrDrHax/fast-automata/blob/main/docs/installation.md")
 
     import pybind11
 
