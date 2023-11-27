@@ -59,7 +59,7 @@ class BaseAgent:
     readonly board pointer
     '''
     @property
-    def pos(self) -> Any: ...
+    def pos(self) -> Pos: ...
     '''
     Get and set the position of the agent.
 
