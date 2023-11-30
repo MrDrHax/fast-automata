@@ -94,11 +94,14 @@ class SimplifiedAgentModel(BaseModel):
     state: str
     layer: int
 
-    def __init__(self, agent: fastautomata_clib.BaseAgent):
-        self.id = agent.getId()
-        self.pos = PosModel(x=agent.pos.x, y=agent.pos.y)
-        self.state = agent.state
-        self.layer = agent.getLayer
+    @staticmethod
+    def makeNew(agent: fastautomata_clib.BaseAgent):
+        return SimplifiedAgentModel(
+            id = agent.getId(),
+            pos = PosModel(x=agent.pos.x, y=agent.pos.y),
+            state = agent.state,
+            layer = agent.getLayer()
+        )
 
 class AgentsModel(BaseModel):
     '''
@@ -111,8 +114,11 @@ class AgentsModel(BaseModel):
 
     total: int
 
-    def __init__(self):
+    @staticmethod
+    def makeNew():
         global simulatedAgentList, staticAgentList
-        self.total = len(simulatedAgentList) + len(staticAgentList)
-        self.simulated = simulatedAgentList
-        self.static = staticAgentList
+        return AgentsModel(
+            total = len(simulatedAgentList) + len(staticAgentList),
+            simulated = [SimplifiedAgentModel.makeNew(x) for x in simulatedAgentList],
+            static = [SimplifiedAgentModel.makeNew(x) for x in staticAgentList]
+        )
