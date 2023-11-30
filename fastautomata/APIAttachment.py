@@ -54,16 +54,18 @@ class BoardModel(BaseModel):
     agents: Agents.AgentsModel
     values: dict[str, Any]
     summary: dict[str, int]
+    step_count: int = 0
 
     # def __init__(self, board: Board.SimulatedBoard) -> None:
 
     @staticmethod
     def makeNew(board: Board.SimulatedBoard) -> 'BoardModel':
         self = BoardModel(
-            board   = board.color_map,
-            agents  = Agents.AgentsModel.makeNew(),
-            values  = board.specialValues,
-            summary = board.color_map_count
+            board       = board.color_map,
+            agents      = Agents.AgentsModel.makeNew(),
+            values      = board.specialValues,
+            summary     = board.color_map_count,
+            step_count  = board.step_count
         )
 
         return self
